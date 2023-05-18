@@ -1,0 +1,95 @@
+---
+title: "Causality analysis on stocks in R"
+author: "ABDUL KHADRER"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Packages
+```{r}
+library(dplyr)
+
+library(readxl)
+
+library(tseries)
+
+library(aTSA)
+
+library(lmtest)
+
+library(corrplot)
+```
+
+
+## Dataset
+
+```{r}
+AAPL = read_excel("AAPL.xlsx")
+WMT = read_excel("WMT.xlsx")
+
+df = data.frame(AAPL$Date, AAPL$Close, WMT$Close)
+df
+
+summary(df)
+
+colnames(df) = c("DATE","AAPL","WMT")
+attach(df)
+```
+
+## Correlation
+
+```{r}
+df_RD = df[,-1 ] # Except Date
+df_RD
+cormatrix = cor(df_RD)
+cormatrix
+
+# PLOT
+corrplot(cormatrix, method = "shade", tl.col = "black", addCoef.col = "black", cl.pos = "n", order = "AOE")
+```
+
+## Stationarity test
+
+```{r}
+
+par(mfrow = c(1,2))
+plot(df$AAPL,type = 'l', main = "APPLE")
+plot(df$WMT, type = 'l', main = "WAL_MART")
+
+adf.test(df$AAPL)
+
+adf.test(df$WMT)
+```
+
+## Converting into stationary series
+
+```{r}
+A = diff(df$AAPL)
+str(A)
+
+W = diff(df$WMT)
+str(W)
+
+
+par(mfrow = c(1,2))
+plot(A, main = ("Diff of AAPL"), type = "l")
+plot(W, main = ("Diff of WMT"), type = "l")
+
+## again to take the Agumented Dicky Fuller test.
+
+adf.test(A)
+
+adf.test(W)
+```
+
+## Casuality test
+
+```{r}
+grangertest(A ~ W)
+
+grangertest(W ~ A)
+```
+
